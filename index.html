@@ -8,11 +8,19 @@
   <script src="script.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>Template</title>
+  <title>Connect Four</title>
   <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 
 <body onload='load()'>
+  <div id="overlay">
+    <h1 id='overlayText'>START GAME</h1><br>
+    <div id='buttons'>
+      <button onclick="startGame(1)" id='button'>Go 1st</button>
+      <button onclick="startGame(2)" id='button'>Go 2nd</button>
+      <button onclick="startGame(3)" id='button'>Self</button>
+    </div>
+  </div>
   <canvas class='canvas' onclick='leftClick()'></canvas>
 </body>
 

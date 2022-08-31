@@ -3,6 +3,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 let canvas;
 let ctx;
+let mousePos = [0,0];
 
 //Useful Functions
 function max(n1, n2) {
@@ -143,5 +144,122 @@ class Vector {
 
   distTo(vector) {
     return Math.sqrt(Math.pow(this.x - vector.x, 2) + Math.pow(this.y - vector.y, 2));
+  }
+}
+
+class Board {
+  constructor() {
+    this.arr = [[0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],];
+    this.toMove = 1;
+    this.winner = 0;
+    this.movesLeft = 42;
+  }
+
+  draw(x = 0, y = 0, w = width, h = height) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'white';
+    const xSpace = w / 7;
+    const ySpace = h / 6;
+    const space = min(xSpace, ySpace);
+    const xStart = (w - (space * 6)) / 2;
+    const yStart = (h - (space * 5)) / 2;
+    const r = space / 4;
+    for(let i = 0; i < 7; i++) {
+      for(let j = 0; j < 6; j++) {
+        ctx.beginPath();
+        ctx.arc(xStart + i * space, yStart + j * space, r, 0, Math.PI * 2);
+        ctx.stroke();
+        switch(this.arr[i][5 - j]) {
+          case 1:
+            ctx.fillStyle = 'blue';
+            ctx.fill();
+            break;
+          case 2:
+            ctx.fillStyle = 'red';
+            ctx.fill();
+            break;
+        }
+      }
+    }
+    const mouseX = Math.floor((mousePos[0] - xStart - (space * .5)) / space) + 1;
+    if(mouseX >= 0 && mouseX < 7) {
+      ctx.fillStyle = 'rgba(100, 100, 100, .5)';
+      ctx.beginPath();
+      ctx.arc(xStart + space * mouseX, yStart, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  getMoves() {
+    let moves = [];
+    for(let i = 0; i < 7; i++) {
+      if(this.arr[i][5] == 0) {
+        moves.push(i);
+      }
+    }
+    return moves;
+  }
+  
+  makeMove(row) {
+    const newBoard = this.copy();
+    
+    if(this.arr[row][5] != 0) {
+      return false;
+    }
+    let pos = 5;
+    while(this.arr[row][pos] == 0 && pos >= 0) {
+      pos -= 1;
+    }
+    pos++;
+    newBoard.arr[row][pos] = this.toMove;
+    newBoard.toMove = (this.toMove % 2) + 1;
+
+    //Check for Win
+    const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+    for(let dir of directions) {
+      let n = 1;
+      let p = {x: row, y: pos};
+      for(let j = 0; j < 2; j++) {
+        let mult = j * 2 - 1;
+        let cont = true;
+        let i = 1;
+        while(cont) {
+          let color;
+          try {
+            color = this.arr[p.x + dir[0] * i * mult][p.y + dir[1] * i * mult];
+          } catch {
+            break;
+          }
+          if(color != this.toMove) {
+            break;
+          }
+          n++;
+          i++;
+        }
+      }
+      if(n >= 4) {
+        newBoard.winner = this.toMove;
+      }
+    }
+    newBoard.movesLeft--;
+    return newBoard;
+  }
+
+  copy() {
+    const newBoard = new Board();
+    for(let i = 0; i < this.arr.length; i++) {
+      for(let j = 0; j < this.arr[i].length; j++) {
+        newBoard.arr[i][j] = this.arr[i][j];
+      }
+    }
+    newBoard.toMove = this.toMove;
+    newBoard.movesLeft = this.movesLeft;
+    return newBoard;
   }
 }
