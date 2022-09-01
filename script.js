@@ -2,12 +2,15 @@ window.onresize = changeWindow;
 let mainBoard = new Board();
 let gameStarted = false;
 let overlay;
+let text;
 let playerTurn;
+let canClick = false;
 
 function load() {
   canvas = document.querySelector('.canvas');
   ctx = canvas.getContext('2d');
   overlay = document.getElementById("overlay");
+  text = document.getElementById("topText");
   canvas.width = width;
   canvas.height = height;
   document.onkeydown = keyPress;
@@ -17,17 +20,22 @@ function load() {
 
 function startGame(n) {
   playerTurn = n;
+  canClick = !(n == 2);
   overlay.style.display = "none";
+  text.style.display = 'block';
   gameStarted = true;
   mainBoard = new Board();
+  text.innerHTML = 'Player Turn';
   if(n == 2) {
-    mainBoard = mainBoard.makeMove(AiMove());
+    text.innerHTML = 'Ai Turn';
+    aiMove();
   }
   redraw();
 }
 
 function finishGame() {
   overlay.style.display = 'block';
+  text.style.display = 'none';
   gameStarted = false;
   //ctx.clearRect(0, 0, width, height);
 }
@@ -37,9 +45,40 @@ function redraw() {
   mainBoard.draw(0, 0, width, height);
 }
 
-function AiMove() {
-  const moves = mainBoard.getMoves();
-  return moves[rand(0, moves.length - 1)];
+function aiDecide(board, maxPlayer, depth = 4) {
+  const moves = board.getMoves();
+  if(board.winner != 0 || moves.length == 0 || depth == 0) {
+    return [false, board.getVal()];
+  }
+  let ext;
+  let bestMove;
+  for(let i = 0; i < moves.length; i++) {
+    const move = moves[i];
+    const newBoard = board.makeMove(move);
+    const outcome = aiDecide(newBoard, !maxPlayer, depth - 1);
+    if(ext == null) {
+      bestMove = move;
+      ext = outcome[1];
+    }
+    if(maxPlayer) {
+      if(outcome[1] > ext) {
+        bestMove = move;
+        ext = outcome[1];
+      }
+    } else {
+      if(outcome[1] < ext) {
+        bestMove = move;
+        ext = outcome[1];
+      }
+    }
+  }
+  //TEMPORARY
+  //IF THE BEST PLAY STILL RESULTS IN LOSS,
+  //CHOOSE RANDOM MOVE, NOT FIRST
+  if((maxPlayer && ext == -10000) || (!maxPlayer && ext == 10000)) {
+    bestMove = moves[rand(0, moves.length - 1)];
+  }
+  return [bestMove, ext];
 }
 
 function changeWindow() {
@@ -55,6 +94,9 @@ function keyPress(key) {
 }
 
 function leftClick() {
+  if(!canClick) {
+    return;
+  }
   const x = event.clientX;
   const y = event.clientY;
   const xSpace = width / 7;
@@ -69,20 +111,32 @@ function leftClick() {
     mainBoard = mainBoard.makeMove(mouseX);
     redraw();
     if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
-      alert('Winner is player ' + mainBoard.winner + '!');
-      finishGame();
+      text.innerHTML = 'Player ' + mainBoard.winner + ' Wins!';
+      setTimeout(finishGame, 1000);
       return;
     }
     if(playerTurn != 3) {
-      mainBoard = mainBoard.makeMove(AiMove());
-      if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
-        alert('Winner is player ' + mainBoard.winner + '!');
-        finishGame();
-        return;
-      }
+      canClick = false;
+      text.innerHTML = 'Ai Turn';
+      setTimeout(aiMove, 1000);
     }
   }
   redraw();
+}
+
+function aiMove() {
+  let move;
+  let player = playerTurn == 2;
+  move = aiDecide(mainBoard, player)[0];
+  mainBoard = mainBoard.makeMove(move);
+  redraw();
+  if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
+    text.innerHTML = 'Player ' + mainBoard.winner + ' Wins!';
+    setTimeout(finishGame, 1000);
+    return;
+  }
+  text.innerHTML = 'Player Turn';
+  canClick = true;
 }
 
 function updateMousePos() {
@@ -91,4 +145,29 @@ function updateMousePos() {
   if(gameStarted) {
     redraw();
   }
+}
+
+function showWinner() {
+  let t;
+  switch(playerTurn) {
+    case 1:
+      if(mainBoard.winner == 1) {
+        t = 'You Win!';
+      } else {
+        t = 'You Win!';
+      }
+      break;
+    case 2:
+      if(mainBoard.winner == 1) {
+        t = 'Ai Wins!';
+      } else {
+        t = 'You Win!';
+      }
+      break;
+    case 3:
+      t = 'Player ' + mainBoard.winner + ' Wins!'; 
+      break;
+  }
+
+  text.innerHTML = t;
 }

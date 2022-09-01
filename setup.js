@@ -262,4 +262,15 @@ class Board {
     newBoard.movesLeft = this.movesLeft;
     return newBoard;
   }
+
+  getVal() {
+    switch(this.winner) {
+      case 1:
+        return 10000;
+      case 2:
+        return -10000;
+    }
+    let ret = 0;
+    return ret;
+  }
 }
