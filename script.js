@@ -46,7 +46,7 @@ function redraw() {
   mainBoard.draw(0, 0, width, height);
 }
 
-function aiDecide(board, maxPlayer, a = Number.MIN_VALUE, b = Number.MAX_VALUE, depth = 4) {
+function aiDecide(board, maxPlayer, a = Number.MIN_VALUE, b = Number.MAX_VALUE, depth = 10) {
   const moves = board.getMoves();
   if(board.winner != 0 || moves.length == 0 || depth == 0) {
     return [false, board.getVal()];
@@ -66,11 +66,19 @@ function aiDecide(board, maxPlayer, a = Number.MIN_VALUE, b = Number.MAX_VALUE, 
         bestMove = move;
         ext = outcome[1];
       }
+      if(ext >= b) {
+        break;
+      }
+      a = max(a, ext);
     } else {
       if(outcome[1] < ext) {
         bestMove = move;
         ext = outcome[1];
       }
+      if(ext <= a) {
+        break;
+      }
+      b = min(b, ext);
     }
   }
   //TEMPORARY
