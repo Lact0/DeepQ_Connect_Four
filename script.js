@@ -34,6 +34,7 @@ function startGame(n) {
 }
 
 function finishGame() {
+  canClick = false;
   overlay.style.display = 'block';
   text.style.display = 'none';
   gameStarted = false;
@@ -45,7 +46,7 @@ function redraw() {
   mainBoard.draw(0, 0, width, height);
 }
 
-function aiDecide(board, maxPlayer, depth = 4) {
+function aiDecide(board, maxPlayer, a = Number.MIN_VALUE, b = Number.MAX_VALUE, depth = 4) {
   const moves = board.getMoves();
   if(board.winner != 0 || moves.length == 0 || depth == 0) {
     return [false, board.getVal()];
@@ -55,7 +56,7 @@ function aiDecide(board, maxPlayer, depth = 4) {
   for(let i = 0; i < moves.length; i++) {
     const move = moves[i];
     const newBoard = board.makeMove(move);
-    const outcome = aiDecide(newBoard, !maxPlayer, depth - 1);
+    const outcome = aiDecide(newBoard, !maxPlayer, a, b, depth - 1);
     if(ext == null) {
       bestMove = move;
       ext = outcome[1];
@@ -111,7 +112,8 @@ function leftClick() {
     mainBoard = mainBoard.makeMove(mouseX);
     redraw();
     if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
-      text.innerHTML = 'Player ' + mainBoard.winner + ' Wins!';
+      canClick = false;
+      showWinner();
       setTimeout(finishGame, 1000);
       return;
     }
@@ -131,8 +133,8 @@ function aiMove() {
   mainBoard = mainBoard.makeMove(move);
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
-    text.innerHTML = 'Player ' + mainBoard.winner + ' Wins!';
-    setTimeout(finishGame, 1000);
+    showWinner();
+    setTimeout(finishGame, 3000);
     return;
   }
   text.innerHTML = 'Player Turn';
@@ -154,7 +156,7 @@ function showWinner() {
       if(mainBoard.winner == 1) {
         t = 'You Win!';
       } else {
-        t = 'You Win!';
+        t = 'Ai Wins!';
       }
       break;
     case 2:
