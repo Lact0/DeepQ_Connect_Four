@@ -203,6 +203,9 @@ class Board {
         moves.push(i);
       }
     }
+    moves = moves.sort((a, b) => {
+      return Math.abs(a - 3) - Math.abs(b - 3);
+    })
     return moves;
   }
   

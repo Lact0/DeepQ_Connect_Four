@@ -5,6 +5,7 @@ let overlay;
 let text;
 let playerTurn;
 let canClick = false;
+let bot1 = new QBot({table: JSON.parse(table1)});
 
 function load() {
   canvas = document.querySelector('.canvas');
@@ -15,7 +16,6 @@ function load() {
   canvas.height = height;
   document.onkeydown = keyPress;
   document.onmousemove = updateMousePos;
-  //runFrame();
 }
 
 function startGame(n) {
@@ -46,48 +46,8 @@ function redraw() {
   mainBoard.draw(0, 0, width, height);
 }
 
-function aiDecide(board, maxPlayer, a = Number.MIN_VALUE, b = Number.MAX_VALUE, depth = 10) {
-  const moves = board.getMoves();
-  if(board.winner != 0 || moves.length == 0 || depth == 0) {
-    return [false, board.getVal()];
-  }
-  let ext;
-  let bestMove;
-  for(let i = 0; i < moves.length; i++) {
-    const move = moves[i];
-    const newBoard = board.makeMove(move);
-    const outcome = aiDecide(newBoard, !maxPlayer, a, b, depth - 1);
-    if(ext == null) {
-      bestMove = move;
-      ext = outcome[1];
-    }
-    if(maxPlayer) {
-      if(outcome[1] > ext) {
-        bestMove = move;
-        ext = outcome[1];
-      }
-      if(ext >= b) {
-        break;
-      }
-      a = max(a, ext);
-    } else {
-      if(outcome[1] < ext) {
-        bestMove = move;
-        ext = outcome[1];
-      }
-      if(ext <= a) {
-        break;
-      }
-      b = min(b, ext);
-    }
-  }
-  //TEMPORARY
-  //IF THE BEST PLAY STILL RESULTS IN LOSS,
-  //CHOOSE RANDOM MOVE, NOT FIRST
-  if((maxPlayer && ext == -10000) || (!maxPlayer && ext == 10000)) {
-    bestMove = moves[rand(0, moves.length - 1)];
-  }
-  return [bestMove, ext];
+function aiDecide(board, maxPlayer) {
+  
 }
 
 function changeWindow() {
@@ -97,8 +57,8 @@ function changeWindow() {
 }
 
 function keyPress(key) {
-  if(key.keyCode != 32) {
-    return;
+  if(key.keyCode == 32) {
+    navigator.clipboard.writeText(JSON.stringify(bot.table));
   }
 }
 
@@ -122,23 +82,23 @@ function leftClick() {
     if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
       canClick = false;
       showWinner();
-      setTimeout(finishGame, 1000);
+      setTimeout(finishGame, 3000);
       return;
     }
     if(playerTurn != 3) {
       canClick = false;
       text.innerHTML = 'Ai Turn';
-      setTimeout(aiMove, 1000);
+      setTimeout(aiMove, 100);
     }
   }
   redraw();
 }
 
 function aiMove() {
-  let move;
-  let player = playerTurn == 2;
-  move = aiDecide(mainBoard, player)[0];
-  mainBoard = mainBoard.makeMove(move);
+  let moves = mainBoard.getMoves();
+  let val = mainBoard.getVal() * (playerTurn == 1? -1: 1);
+  let move = bot1.getAction(encode(), moves.length, val);
+  mainBoard = mainBoard.makeMove(moves[move]);
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
     showWinner();
@@ -147,6 +107,16 @@ function aiMove() {
   }
   text.innerHTML = 'Player Turn';
   canClick = true;
+}
+
+function encode() {
+  let str = '';
+  for(let row of mainBoard.arr) {
+    for(let n of row) {
+      str = str.concat(n);
+    }
+  }
+  return str;
 }
 
 function updateMousePos() {
@@ -158,7 +128,13 @@ function updateMousePos() {
 }
 
 function showWinner() {
+  bot1.setQ(mainBoard.getVal() * (playerTurn == 1? -1: 1));
+  bot1.reset();
   let t;
+  if(mainBoard.movesLeft == 0) {
+    text.innerHTML = 'Tie!';
+    return;
+  }
   switch(playerTurn) {
     case 1:
       if(mainBoard.winner == 1) {
