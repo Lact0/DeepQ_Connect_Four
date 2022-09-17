@@ -76,6 +76,9 @@ function leftClick() {
   if(!gameStarted || (playerTurn != mainBoard.toMove && playerTurn != 3)) {
     return;
   }
+  if(mouseX < 0 || mouseX > 6) {
+    return;
+  }
   if(mainBoard.arr[mouseX][5] == 0) {
     mainBoard = mainBoard.makeMove(mouseX);
     redraw();
@@ -95,11 +98,13 @@ function leftClick() {
 }
 
 function aiMove() {
-  return;
+  let move = bot.getAction(encode());
   let moves = mainBoard.getMoves();
-  let val = mainBoard.getVal() * (playerTurn == 1? -1: 1);
-  let move = bot1.getAction(encode(), moves.length, val);
-  mainBoard = mainBoard.makeMove(moves[move]);
+  if(moves.indexOf(move) == -1) {
+    move = moves[rand(0, moves.length - 1)];
+    bot.addReward(-100);
+  }
+  mainBoard = mainBoard.makeMove(move);
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
     showWinner();
@@ -111,13 +116,23 @@ function aiMove() {
 }
 
 function encode() {
-  let str = '';
+  let out = [];
   for(let row of mainBoard.arr) {
     for(let n of row) {
-      str = str.concat(n);
+      switch(n) {
+        case 0:
+          out.push(0);
+          break;
+        case 1:
+          out.push(-1);
+          break;
+        case 2:
+          out.push(1);
+          break;
+      }
     }
   }
-  return str;
+  return out;
 }
 
 function updateMousePos() {

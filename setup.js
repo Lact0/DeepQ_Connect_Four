@@ -208,10 +208,9 @@ class Board {
     })
     return moves;
   }
-  
+
   makeMove(row) {
     const newBoard = this.copy();
-    
     if(this.arr[row][5] != 0) {
       return false;
     }

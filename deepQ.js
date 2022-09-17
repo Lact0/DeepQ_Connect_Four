@@ -10,6 +10,18 @@ function softMax(arr) {
   return ret;
 }
 
+function argMax(arr) {
+  let max = arr[0];
+  let maxInd = 0;
+  for(let i = 1; i < arr.length; i++) {
+    if(arr[i] > max) {
+      max = arr[i];
+      maxInd = i;
+    }
+  }
+  return maxInd;
+}
+
 class DeepQ {
   constructor(numIn, dim, params = {}) {
     this.eps = params.eps || .8;
@@ -19,38 +31,35 @@ class DeepQ {
     this.dim = dim;
     this.mainNet = params.mainNet || new NeuralNetwork(numIn, dim, params);
     this.targetNet = this.mainNet.copy();
+    //One piece of memory is [state, action, nextState, reward]
+    this.memory = [];
   }
 
   //You should have an array of moves, put in length,
   //return the index for the array.
-  getAction(state, numMoves, reward = 0) {
-    if(!(state in this.table)) {
-      let moves = [];
-      for(let i = 0; i < numMoves; i++) {
-        moves.push(0);
-      }
-      this.table[state] = moves;
+  getAction(state, reward = 0) {
+    if(this.memory.length > 0) {
+      const end = this.memory.length - 1;
+      this.memory[end][2] = (state);
+      this.memory[end][3] += (reward);
     }
-    let probabilities = softMax(this.table[state]);
-    let move = 0;
-    let n = Math.random();
-    while(n > 0) {
-      n -= probabilities[move];
-      move++;
+
+    const values = this.mainNet.pass(state);
+    let action = parseInt(Math.random() * values.length);
+    if(Math.random() < this.eps) {
+      action = argMax(values);
     }
-    move--;
-    //Update the old Q Value
-    if(this.old) {
-      const oldQ = this.table[this.old[0]][this.old[1]];
-      let sum = 0;
-      for(let i = 0; i < probabilities.length; i++) {
-        probabilities[i] * this.table[state][i];
-      }
-      const newQ = reward + this.discount * sum;
-      const td = newQ - oldQ;
-      this.table[this.old[0]][this.old[1]] += td * this.lr;
-    }
-    this.old = [state, move];
-    return move;
+
+    let memory = [state, action, 0, 0];
+    this.memory.push(memory);
+    return action;
+  }
+
+  addReward(r) {
+    this.memory[this.memory.length - 1][3] += r;
+  }
+
+  setTarget() {
+    this.targetNet = this.mainNet.copy();
   }
 }
