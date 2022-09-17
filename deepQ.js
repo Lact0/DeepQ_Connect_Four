@@ -10,14 +10,15 @@ function softMax(arr) {
   return ret;
 }
 
-class QBot {
-  constructor(params = {}) {
-    this.table = params.table || {};
+class DeepQ {
+  constructor(numIn, dim, params = {}) {
     this.eps = params.eps || .8;
     this.lr = params.lr || .2;
     this.discount = params.lr || .9;
-    //previous [state, actions]
-    this.old;
+    this.numIn = numIn;
+    this.dim = dim;
+    this.mainNet = params.mainNet || new NeuralNetwork(numIn, dim, params);
+    this.targetNet = this.mainNet.copy();
   }
 
   //You should have an array of moves, put in length,
@@ -51,13 +52,5 @@ class QBot {
     }
     this.old = [state, move];
     return move;
-  }
-
-  setQ(r) {
-    this.table[this.old[0]][this.old[1]] = r;
-  }
-
-  reset() {
-    this.old = false;
   }
 }

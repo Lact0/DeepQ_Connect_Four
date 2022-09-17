@@ -5,7 +5,7 @@ let overlay;
 let text;
 let playerTurn;
 let canClick = false;
-let bot1 = new QBot({table: JSON.parse(table1)});
+let bot = new DeepQ(42, [42, 20, 7]);
 
 function load() {
   canvas = document.querySelector('.canvas');
@@ -47,7 +47,7 @@ function redraw() {
 }
 
 function aiDecide(board, maxPlayer) {
-  
+
 }
 
 function changeWindow() {
@@ -82,7 +82,7 @@ function leftClick() {
     if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
       canClick = false;
       showWinner();
-      setTimeout(finishGame, 3000);
+      setTimeout(finishGame, 2000);
       return;
     }
     if(playerTurn != 3) {
@@ -95,6 +95,7 @@ function leftClick() {
 }
 
 function aiMove() {
+  return;
   let moves = mainBoard.getMoves();
   let val = mainBoard.getVal() * (playerTurn == 1? -1: 1);
   let move = bot1.getAction(encode(), moves.length, val);
@@ -102,7 +103,7 @@ function aiMove() {
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
     showWinner();
-    setTimeout(finishGame, 3000);
+    setTimeout(finishGame, 2000);
     return;
   }
   text.innerHTML = 'Player Turn';
@@ -128,8 +129,6 @@ function updateMousePos() {
 }
 
 function showWinner() {
-  bot1.setQ(mainBoard.getVal() * (playerTurn == 1? -1: 1));
-  bot1.reset();
   let t;
   if(mainBoard.movesLeft == 0) {
     text.innerHTML = 'Tie!';
@@ -151,7 +150,7 @@ function showWinner() {
       }
       break;
     case 3:
-      t = 'Player ' + mainBoard.winner + ' Wins!'; 
+      t = 'Player ' + mainBoard.winner + ' Wins!';
       break;
   }
 
