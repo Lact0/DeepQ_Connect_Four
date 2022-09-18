@@ -105,6 +105,7 @@ function aiMove() {
     bot.addReward(-100);
   }
   bot.trainLatestQ();
+  //DOESNT TRAIN END OF GAME
   mainBoard = mainBoard.makeMove(move);
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
