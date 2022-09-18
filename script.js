@@ -104,6 +104,7 @@ function aiMove() {
     move = moves[rand(0, moves.length - 1)];
     bot.addReward(-100);
   }
+  bot.trainLatestQ();
   mainBoard = mainBoard.makeMove(move);
   redraw();
   if(mainBoard.winner != 0 || mainBoard.movesLeft == 0) {
@@ -144,6 +145,7 @@ function updateMousePos() {
 }
 
 function showWinner() {
+  bot.finishEp();
   let t;
   if(mainBoard.movesLeft == 0) {
     text.innerHTML = 'Tie!';

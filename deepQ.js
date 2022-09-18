@@ -1,15 +1,3 @@
-function softMax(arr) {
-  let ret = [];
-  let sum = 0;
-  for(let n of arr) {
-    sum += Math.exp(n);
-  }
-  for(let n of arr) {
-    ret.push(Math.exp(n) / sum);
-  }
-  return ret;
-}
-
 function argMax(arr) {
   let max = arr[0];
   let maxInd = 0;
@@ -59,7 +47,28 @@ class DeepQ {
     this.memory[this.memory.length - 1][3] += r;
   }
 
+  finishEp() {
+    this.memory = [];
+    this.setTarget();
+  }
+
   setTarget() {
     this.targetNet = this.mainNet.copy();
+  }
+
+  trainLatestQ() {
+    if(this.memory.length < 2) {
+      return false;
+    }
+    let mem = this.memory[this.memory.length - 2];
+    const s1 = mem[0];
+    const a = mem[1];
+    const s2 = mem[2];
+    const r = mem[3];
+    let qvalues = this.mainNet.pass(s1);
+    let futureVals = this.targetNet.pass(s2);
+    let maxq = futureVals.reduce((a, b) => Math.max(a, b), -Infinity);
+    qvalues[a] = r + this.discount * maxq;
+    this.mainNet.trainBatch([s1], [qvalues], this.lr);
   }
 }
